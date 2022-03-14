@@ -1,0 +1,206 @@
+<form class="{{cssClass}} flexcol" autocomplete="off">
+    <header class="sheet-header flexrow">
+        <img class="profile" src="{{actor.img}}" title="{{actor.name}}" alt="{{actor.name}}" data-edit="img">
+        <section class="header-details flexcol">
+            {{> "systems/dnd5e/templates/actors/parts/actor-warnings.html"}}
+
+            <h1 class="charname">
+                <input name="name" type="text" value="{{actor.name}}" placeholder="{{localize 'DND5E.Name'}}">
+            </h1>
+            <h3 class="charname">
+                <input name="data.subtitle" type="text" value="{{actor.data.subtitle}}">
+            </h3>
+        </section>
+    </header>
+
+    <nav class="sheet-navigation tabs" data-group="primary">
+        <a class="item active" data-tab="attributes">{{localize 'DND5E.Attributes'}}</a>
+        <a class="item" data-tab="effects">{{ localize "DND5E.Effects" }}</a>
+        <a class="item" data-tab="biography">{{localize 'DND5E.Description'}}</a>
+    </nav>
+
+    <section class="sheet-body">
+        <div class="tab attributes flexrow" data-group="primary" data-tab="attributes">
+            <ul class="ability-scores flexrow">
+                {{#each data.abilities as |ability id|}}
+                <li class="ability" data-ability="{{id}}">
+                    <h4 class="ability-name box-title rollable">{{ability.label}}</h4>
+                    <input class="ability-score" name="data.abilities.{{id}}.value" type="text"
+                        value="{{ability.value}}" data-dtype="Number" placeholder="0">
+                    <div class="ability-modifiers flexrow">
+                        <span class="ability-mod" title="{{localize 'DND5E.Modifier'}}">
+                            {{numberFormat ability.mod decimals=0 sign=true}}
+                        </span>
+                    </div>
+                </li>
+                {{/each}}
+            </ul>
+            <section class="center-pane flexcol">
+                <div class="traits" style="flex: 0">
+                    <div class="form-group">
+                        <label>License</label>
+                        <select class="actor-size" name="data.traits.size">
+                            {{selectOptions size selected=data.traits.size}}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="flex: 2">Upkeep</label>
+                        <div class="counter-value" style="flex: 1;">
+                            <input type="text" placeholder="gp" name="data.traits.upkeep" style="border: 1px solid #c9c7b8;"
+                                value="{{data.traits.upkeep}}">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Property Quality</label>
+                        <select class="actor-size" name="data.traits.propertyQuality">
+                            {{selectOptions propertyQuality selected=data.traits.propertyQuality}}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Property Size</label>
+                        <select class="actor-size" name="data.traits.propertySize">
+                            {{selectOptions size selected=data.traits.propertySize}}
+                        </select>
+                    </div>
+
+
+                </div>
+
+                <ol class="currency flexrow" style="flex: 0; align-items: center; padding: 0;">
+                    <h3 style="flex: 2;">
+                        {{localize "DND5E.Currency"}}
+                        <a class="currency-convert rollable" data-action="convertCurrency"
+                            title="{{localize 'DND5E.CurrencyConvert'}}">
+                            <i class="fas fa-coins"></i>
+                        </a>
+                    </h3>
+                    {{#each data.currency as |v k|}}
+                    <label class="denomination {{k}}">{{ lookup ../labels.currencies k }}</label>
+                    <input type="text" name="data.currency.{{k}}" value="{{v}}" data-dtype="Number" />
+                    {{/each}}
+                </ol>
+
+                <ol class="items-list inventory-list">
+                    {{#each cargo as |section sid|}}
+                    <li class="items-header flexrow">
+                        <h3 class="item-name flexrow">{{localize section.label}}</h3>
+
+                        {{#if section.columns}}
+                        {{#each section.columns}}
+                        <div class="item-detail {{css}}">{{label}}</div>
+                        {{/each}}
+                        {{else}}
+                        {{#if ../isCharacter}}
+                        <div class="item-detail item-weight">{{localize "DND5E.Weight"}}</div>
+                        {{/if}}
+
+                        <div class="item-detail item-uses">{{localize "DND5E.Charges"}}</div>
+                        <div class="item-detail item-action">{{localize "DND5E.Usage"}}</div>
+                        {{/if}}
+
+                        {{#if ../owner}}
+                        <div class="item-controls flexrow">
+                            <a class="item-control item-create" title='{{localize "DND5E.ItemCreate"}}' {{#each
+                                section.dataset as |v k|}}data-{{k}}="{{v}}" {{/each}}>
+                                <i class="fas fa-plus"></i> {{localize "DND5E.Add"}}
+                            </a>
+                        </div>
+                        {{/if}}
+                    </li>
+
+                    <ol class="item-list">
+                        {{#each section.items as |item iid|}}
+                        <li class="item flexrow {{section.css}}"
+                            data-item-id="{{#if section.editableName}}{{iid}}{{else}}{{item._id}}{{/if}}">
+                            <div class="item-name flexrow rollable">
+                                {{#if section.editableName}}
+                                <input type="text" value="{{item.name}}">
+                                {{else}}
+                                <div class="item-image" tabindex="0" role="button" aria-label="{{item.name}}"
+                                    style="background-image: url('{{item.img}}')"></div>
+                                <h4>
+                                    {{item.name~}}
+                                    {{~#if item.isStack}} ({{item.data.quantity}}){{/if}}
+                                </h4>
+                                {{#if item.attunement}}
+                                <div class="item-detail attunement">
+                                    <i class="fas {{item.attunement.icon}} {{item.attunement.cls}}"
+                                        title="{{localize item.attunement.title}}"></i>
+                                </div>
+                                {{/if}}
+                                {{/if}}
+                            </div>
+
+                            {{#if section.columns}}
+                            {{#each section.columns}}
+                            <div class="item-detail {{css}}">
+                                {{#with (getProperty item property)}}
+                                {{#if ../editable}}
+                                <input type="text" value="{{this}}" placeholder="&mdash;" data-dtype="{{../editable}}"
+                                    data-property="{{../property}}">
+                                {{else}}
+                                {{this}}
+                                {{/if}}
+                                {{/with}}
+                            </div>
+                            {{/each}}
+                            {{else}}
+                            {{#if ../../isCharacter}}
+                            <div class="item-detail item-weight">
+                                {{#if item.totalWeight}}
+                                <div class="item-detail">
+                                    {{ item.totalWeight }} {{ @root.weightUnit }}
+                                </div>
+                                {{/if}}
+                            </div>
+                            {{/if}}
+
+                            <div class="item-detail item-uses">
+                                {{#if item.hasUses }}
+                                <input type="text" value="{{item.data.uses.value}}" placeholder="0" />
+                                / {{item.data.uses.max}}
+                                {{/if}}
+                            </div>
+
+                            <div class="item-detail item-action">
+                                {{#if item.data.activation.type }}
+                                {{item.labels.activation}}
+                                {{/if}}
+                            </div>
+                            {{/if}}
+
+                            {{#if ../../owner}}
+                            <div class="item-controls flexrow">
+                                {{#unless @root.isVehicle}}
+                                <a class="item-control item-toggle {{item.toggleClass}}" title='{{item.toggleTitle}}'><i
+                                        class="fas fa-shield-alt"></i></a>
+                                {{/unless}}
+                                {{#unless section.editableName}}
+                                <a class="item-control item-edit" title='{{localize "DND5E.ItemEdit"}}'><i
+                                        class="fas fa-edit"></i></a>
+                                {{/unless}}
+                                <a class="item-control item-delete" title='{{localize "DND5E.ItemDelete"}}'><i
+                                        class="fas fa-trash"></i></a>
+                            </div>
+                            {{/if}}
+                        </li>
+                        {{/each}}
+                    </ol>
+                    {{/each}}
+                </ol>
+            </section>
+        </div>
+
+        <div class="tab effects flexcol" data-group="primary" data-tab="effects">
+            {{> "systems/dnd5e/templates/actors/parts/active-effects.html"}}
+        </div>
+
+        <div class="tab biography flexcol" data-group="primary" data-tab="biography">
+            {{editor content=data.details.biography.value target='data.details.biography.value'
+            button=true owner=owner editable=editable rollData=rollData}}
+        </div>
+    </section>
+</form>

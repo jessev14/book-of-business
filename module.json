@@ -1,0 +1,14 @@
+{
+    "name": "book-of-business",
+    "title": "Book of Business",
+    "description": "",
+    "version": "1.0.0",
+    "author": "enso#0361",
+    "esmodules": [
+        "./scripts/book-of-business.js"
+    ],
+    "styles": [
+        "./styles/book-of-business.css"
+    ],
+    "compatibleCoreVersion": "9"
+}
